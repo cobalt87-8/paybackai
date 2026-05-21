@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PaybackAI — Debt Recovery Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;--bg2:#f7f8fa;--bg3:#f0f2f5;
+  --text:#0f1117;--text2:#6b7280;--text3:#9ca3af;
+  --border:#e5e7eb;--border2:#d1d5db;
+  --accent:#2563eb;--accent2:#1d4ed8;
+  --green:#16a34a;--red:#dc2626;--amber:#d97706;
+  --green-bg:#f0fdf4;--red-bg:#fef2f2;--amber-bg:#fffbeb;--blue-bg:#eff6ff;
+  --green-text:#15803d;--red-text:#b91c1c;--amber-text:#b45309;--blue-text:#1d4ed8;
+  --radius:8px;--radius-lg:12px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;
+    --text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+    --border:#2d3748;--border2:#4a5568;
+    --green-bg:#052e16;--red-bg:#450a0a;--amber-bg:#451a03;--blue-bg:#1e3a5f;
+    --green-text:#4ade80;--red-text:#f87171;--amber-text:#fbbf24;--blue-text:#60a5fa;
+  }
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:20px}
+.app-wrap{position:relative;width:100%;max-width:1000px}
+.app{display:grid;grid-template-columns:210px 1fr;min-height:600px;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;background:var(--bg);box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:1rem 0;display:flex;flex-direction:column}
+.sidebar-logo{display:flex;align-items:center;gap:8px;padding:0 1rem 1rem;border-bottom:1px solid var(--border);margin-bottom:.75rem}
+.logo-box{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sidebar-logo span{font-size:15px;font-weight:600;color:var(--text)}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 1rem;font-size:13px;color:var(--text2);cursor:pointer;border-left:2px solid transparent;transition:all .12s;user-select:none}
+.nav-item:hover{color:var(--text);background:var(--bg)}
+.nav-item.active{color:var(--accent);border-left-color:var(--accent);background:var(--bg);font-weight:500}
+.nav-item i{font-size:17px}
+.main{overflow:hidden;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:.875rem 1.25rem;border-bottom:1px solid var(--border);background:var(--bg)}
+.topbar-title{font-size:15px;font-weight:600;color:var(--text)}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;font-size:12px;font-weight:500;border-radius:6px;cursor:pointer;border:1px solid var(--border2);background:var(--bg);color:var(--text);transition:all .12s}
+.btn:hover{background:var(--bg2)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent2)}
+.content{flex:1;overflow-y:auto;padding:1.125rem 1.25rem;background:var(--bg)}
+.page{display:none}
+.page.active{display:block}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.125rem}
+.stat{background:var(--bg2);border-radius:var(--radius);padding:.875rem;border:1px solid var(--border)}
+.stat-l{font-size:11px;color:var(--text3);margin-bottom:5px;font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+.stat-v{font-size:22px;font-weight:600;color:var(--text)}
+.stat-b{font-size:11px;margin-top:4px}
+.badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+.b-red{background:var(--red-bg);color:var(--red-text)}
+.b-amber{background:var(--amber-bg);color:var(--amber-text)}
+.b-blue{background:var(--blue-bg);color:var(--blue-text)}
+.b-green{background:var(--green-bg);color:var(--green-text)}
+.b-gray{background:var(--bg2);color:var(--text2);border:1px solid var(--border)}
+.section-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:.625rem;text-transform:uppercase;letter-spacing:.4px}
+.tbl{width:100%;font-size:12px;border-collapse:collapse}
+.tbl th{text-align:left;padding:7px 10px;font-size:11px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border);background:var(--bg2);text-transform:uppercase;letter-spacing:.3px}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--bg2)}
+.act-btn{font-size:11px;padding:4px 9px;border-radius:5px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);transition:all .12s;font-weight:500}
+.act-btn:hover{background:var(--blue-bg);color:var(--blue-text);border-color:#93c5fd}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:999}
+.modal{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.375rem;width:480px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:1.125rem;display:flex;align-items:center;justify-content:space-between}
+.modal-close{cursor:pointer;color:var(--text3);font-size:20px;background:none;border:none;line-height:1;transition:color .12s}
+.modal-close:hover{color:var(--text)}
+.email-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:.875rem;font-size:12.5px;color:var(--text);line-height:1.65;min-height:130px;white-space:pre-wrap;margin-bottom:.875rem;font-family:inherit}
+.loading-dots span{display:inline-block;animation:dot 1.2s infinite;font-size:18px;color:var(--text2)}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.form-row{margin-bottom:.875rem}
+.form-row label{display:block;font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.form-row input,.form-row select,.form-row textarea{width:100%;font-size:13px;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);outline:none;transition:border .12s}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--accent)}
+.two-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tl-row{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.tl-row:last-child{border-bottom:none}
+.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.tl-msg{font-size:12.5px;color:var(--text2);line-height:1.4}
+.tl-t{font-size:11px;color:var(--text3);margin-top:2px}
+.pricing-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:.5rem}
+.plan{border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.125rem;position:relative}
+.plan.featured{border:2px solid var(--accent)}
+.plan-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:10px;padding:2px 12px;border-radius:10px;font-weight:600;white-space:nowrap}
+.plan-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.plan-price{font-size:24px;font-weight:700;color:var(--text);margin-bottom:10px}
+.plan-price span{font-size:12px;color:var(--text3);font-weight:400}
+.plan-feat{font-size:12px;color:var(--text2);margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.info-box{margin-top:1.125rem;padding:.875rem;background:var(--blue-bg);border-radius:var(--radius);font-size:12px;color:var(--blue-text);line-height:1.5;border:1px solid #bfdbfe}
+</style>
+</head>
+<body>
+
+<div class="app-wrap">
+<div class="app" id="mainApp">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-box"><i class="ti ti-coin" style="color:#fff;font-size:16px"></i></div>
+      <span>PaybackAI</span>
+    </div>
+    <div class="nav-item active" onclick="showPage('dashboard',this)"><i class="ti ti-layout-dashboard"></i> Dashboard</div>
+    <div class="nav-item" onclick="showPage('invoices',this)"><i class="ti ti-file-invoice"></i> Invoices</div>
+    <div class="nav-item" onclick="showPage('compose',this)"><i class="ti ti-mail"></i> AI Compose</div>
+    <div class="nav-item" onclick="showPage('activity',this)"><i class="ti ti-activity"></i> Activity</div>
+    <div class="nav-item" onclick="showPage('pricing',this)"><i class="ti ti-credit-card"></i> Pricing</div>
+    <div style="margin-top:auto;padding:1rem;border-top:1px solid var(--border);margin-top:auto">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:5px;font-weight:500">Free plan — 3/5 invoices</div>
+      <div style="height:5px;background:var(--border);border-radius:3px"><div style="width:60%;height:100%;background:var(--accent);border-radius:3px"></div></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="pageTitle">Dashboard</div>
+      <div style="display:flex;gap:7px">
+        <button class="btn" onclick="showPage('compose',document.querySelector('[onclick*=compose]'))"><i class="ti ti-plus"></i> New warning</button>
+        <button class="btn btn-primary" onclick="showAddModal()"><i class="ti ti-file-plus"></i> Add invoice</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-row">
+          <div class="stat"><div class="stat-l">Total collected</div><div class="stat-v">$84,320</div><div class="stat-b"><span class="badge b-green">↑ 18% this month</span></div></div>
+          <div class="stat"><div class="stat-l">Hours saved</div><div class="stat-v">142</div><div class="stat-b" style="font-size:11px;color:var(--text3)">via automated outreach</div></div>
+          <div class="stat"><div class="stat-l">Warnings sent</div><div class="stat-v">387</div><div class="stat-b"><span class="badge b-blue">61% open rate</span></div></div>
+          <div class="stat"><div class="stat-l">Unpaid dues</div><div class="stat-v" style="color:var(--red-text)">23</div><div class="stat-b"><span class="badge b-amber">5 critical</span></div></div>
+        </div>
+        <div class="section-title">Recent unpaid invoices</div>
+        <table class="tbl" id="dashTable"></table>
+        <div style="margin-top:1rem;padding:.875rem;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)">
+          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:.625rem">⚡ Avg time to pay after warning</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <div style="font-size:12px;color:var(--text2)">After 1st warning: <b style="color:var(--text)">4.2 days</b></div>
+            <div style="font-size:12px;color:var(--text2)">After 2nd warning: <b style="color:var(--text)">1.8 days</b></div>
+            <div style="font-size:12px;color:var(--text2)">After final notice: <b style="color:var(--text)">0.9 days</b></div>
+            <div style="font-size:12px;color:var(--text2)">Never responded: <b style="color:var(--text)">8%</b></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INVOICES -->
+      <div class="page" id="page-invoices">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem">
+          <div style="font-size:12px;color:var(--text3);font-weight:500" id="invoiceCount"></div>
+          <input type="text" placeholder="Search invoices..." oninput="filterInvoices(this.value)" style="font-size:12px;padding:6px 11px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--text);width:200px;outline:none">
+        </div>
+        <table class="tbl" id="invoiceTable"></table>
+      </div>
+
+      <!-- AI COMPOSE -->
+      <div class="page" id="page-compose">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.5">Select an invoice and let AI write a personalized warning email in seconds.</div>
+        <div class="two-form" style="margin-bottom:.875rem">
+          <div class="form-row" style="margin:0"><label>Invoice</label>
+            <select id="composeSelect" onchange="updateComposeInfo()">
+              <option value="">— pick invoice —</option>
+            </select>
+          </div>
+          <div class="form-row" style="margin:0"><label>Tone</label>
+            <select id="composeTone">
+              <option value="professional">Professional</option>
+              <option value="firm and direct">Firm & Direct</option>
+              <option value="urgent">Urgent</option>
+              <option value="friendly">Friendly Reminder</option>
+            </select>
+          </div>
+        </div>
+        <div id="composeInfo" style="font-size:11px;color:var(--text3);margin-bottom:.875rem;min-height:16px"></div>
+        <button class="btn btn-primary" onclick="generateEmail()" id="genBtn" style="margin-bottom:1rem"><i class="ti ti-sparkles"></i> Generate with AI</button>
+        <div id="emailOut" style="display:none">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Generated email</div>
+          <div class="email-box" id="emailContent"></div>
+          <div style="display:flex;gap:7px">
+            <button class="btn btn-primary" onclick="markSent()"><i class="ti ti-send"></i> Mark as sent</button>
+            <button class="btn" onclick="copyEmail()"><i class="ti ti-copy"></i> Copy</button>
+            <button class="btn" onclick="generateEmail()"><i class="ti ti-refresh"></i> Regenerate</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY -->
+      <div class="page" id="page-activity">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:1rem">All warnings sent and payments received.</div>
+        <div id="activityFeed"></div>
+      </div>
+
+      <!-- PRICING -->
+      <div class="page" id="page-pricing">
+        <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px">Choose a plan</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:1.25rem">Built for US businesses. Cancel anytime. No contracts.</div>
+        <div class="pricing-grid">
+          <div class="plan">
+            <div class="plan-name">Starter</div>
+            <div class="plan-price">Free <span>/mo</span></div>
+            <div class="plan-feat"><i class="ti ti-check" style="color:var(--green-text);font-size:14px"></i> 5 invoices/month</div>
+            <div class="plan-feat"><i class="ti ti-check" style="color:var(--green-text);font-size:14px"></i> AI email generation</div>
+            <div class="plan-feat"><i class="ti ti-check" style="color:var(--green-text);font-size:14px"></i> Basic dashboard</div>
+            <button class="btn" style="width:100%;margin-top:.875rem;justify-content:center">Current plan</button>
+          </div>
+          <div class="plan featured">
+            <div class="plan-badge">Most popular</div>
+            <div class="plan-name">Pro</div>
+            <div class="plan-price">$49 <span>/mo</span></div>
+            <div class="plan-feat"><i class="ti ti-check" style="color:var(--green-text);font-size:14px"></i> Unlimited invoices</div>
+            <div class="plan-feat"><i class="ti ti-check" style="color:var(--green-text);font-size:14px"></i> Auto email sequences</div>
+            <div class="plan-feat"><i class="ti ti-check" style="color:var(--green-text);font-size:14px"></i> QuickBooks sync</div>
+            <div class="plan-feat"><i class="ti ti-check" style="color:var(--green-text);font-size:14px"></i> Analytics & reports</div>
+            <button class="btn btn-primary" style="width:100%;margin-top:.875rem;justify-content:center">Upgrade — $49/mo</button>
+          </div>
+          <div class="plan">
+            <div class="plan-name">Agency</div>
+            <div class="plan-price">$129 <span>/mo</span></div>
+            <div class="plan-feat"><i class="ti ti-check" style="color:var(--green-text);font-size:14px"></i> 10 client accounts</div>
+            <div class="plan-feat"><i class="ti ti-check" style="color:var(--green-text);font-size:14px"></i> White-label dashboard</div>
+            <div class="plan-feat"><i class="ti ti-check" style="color:var(--green-text);font-size:14px"></i> Priority support</div>
+            <button class="btn" style="width:100%;margin-top:.875rem;justify-content:center">Contact sales</button>
+          </div>
+        </div>
+        <div class="info-box">
+          <b>💡 For Indian founders:</b> Use <b>Lemon Squeezy</b> (lemonsqueezy.com) to accept USD from US customers — no GST registration needed, handles all US sales tax automatically. Takes ~5% cut. Sign up, create a $49/mo product, paste checkout link into Upgrade button. Done.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ADD INVOICE MODAL -->
+<div class="modal-overlay" id="addModal" style="display:none" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal">
+    <div class="modal-title">Add invoice <button class="modal-close" onclick="closeAddModal()">×</button></div>
+    <div class="two-form">
+      <div class="form-row"><label>Company name</label><input id="f-company" placeholder="Acme Corp"></div>
+      <div class="form-row"><label>Contact email</label><input id="f-email" placeholder="billing@acme.com"></div>
+    </div>
+    <div class="two-form">
+      <div class="form-row"><label>Amount owed ($)</label><input id="f-amount" type="number" placeholder="5000"></div>
+      <div class="form-row"><label>Days overdue</label><input id="f-days" type="number" placeholder="30"></div>
+    </div>
+    <div class="form-row"><label>Invoice #</label><input id="f-inv" placeholder="INV-2025-001"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:.25rem">
+      <button class="btn" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addInvoice()"><i class="ti ti-plus"></i> Add invoice</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="sentModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal" style="width:340px;text-align:center">
+    <div style="font-size:40px;margin-bottom:.75rem">✅</div>
+    <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:.5rem">Warning marked as sent!</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:1.125rem">Activity log updated. We'll track when they respond.</div>
+    <button class="btn btn-primary" onclick="document.getElementById('sentModal').style.display='none'">Done</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ---- DATA ----
+let invoices = [
+  {id:1,company:'Anchor Foods LLC',email:'billing@anchorfoods.com',amount:12400,days:47,inv:'INV-2024-089',warnings:3,status:'overdue'},
+  {id:2,company:'BlueLine Media',email:'ap@bluelinemedia.com',amount:5800,days:31,inv:'INV-2024-102',warnings:2,status:'warned'},
+  {id:3,company:'Crestwood Mfg.',email:'finance@crestwood.com',amount:3100,days:12,inv:'INV-2025-011',warnings:1,status:'warned'},
+  {id:4,company:'Denton & Sons',email:'john@dentonsons.com',amount:890,days:5,inv:'INV-2025-019',warnings:0,status:'new'},
+  {id:5,company:'Evergreen Supply',email:'ar@evergreensupply.com',amount:7200,days:38,inv:'INV-2024-097',warnings:2,status:'overdue'},
+];
+let activity = [
+  {dot:'#2563eb',msg:'Anchor Foods — 3rd warning sent by AI',time:'2 mins ago'},
+  {dot:'#16a34a',msg:'BlueLine Media paid $5,800 ✓',time:'1 hr ago'},
+  {dot:'#dc2626',msg:'Crestwood Mfg. escalated to final notice',time:'3 hrs ago'},
+  {dot:'#2563eb',msg:'Denton & Sons — 1st reminder sent',time:'5 hrs ago'},
+  {dot:'#16a34a',msg:'Evergreen Supply partial payment $2,000',time:'Yesterday'},
+];
+let nextId = 6;
+
+// ---- HELPERS ----
+function statusBadge(s){
+  if(s==='overdue') return '<span class="badge b-red">Overdue</span>';
+  if(s==='warned')  return '<span class="badge b-amber">Warned</span>';
+  if(s==='new')     return '<span class="badge b-blue">New</span>';
+  if(s==='paid')    return '<span class="badge b-green">Paid</span>';
+  return '';
+}
+function ord(n){return n+(n===1?'st':n===2?'nd':n===3?'rd':'th')}
+
+// ---- RENDER ----
+function renderDashTable(){
+  document.getElementById('dashTable').innerHTML =
+    '<tr><th>Company</th><th>Amount</th><th>Days overdue</th><th>Status</th><th>Warnings</th><th></th></tr>' +
+    invoices.slice(0,5).map(i=>`<tr>
+      <td style="font-weight:600">${i.company}</td>
+      <td>$${i.amount.toLocaleString()}</td>
+      <td>${i.days}d</td>
+      <td>${statusBadge(i.status)}</td>
+      <td style="color:var(--text3)">${i.warnings}</td>
+      <td><button class="act-btn" onclick="quickCompose(${i.id})">⚡ Generate warning</button></td>
+    </tr>`).join('');
+}
+
+function renderInvoiceTable(data){
+  data = data || invoices;
+  document.getElementById('invoiceCount').textContent = data.length + ' invoices total';
+  document.getElementById('invoiceTable').innerHTML =
+    '<tr><th>Invoice #</th><th>Company</th><th>Email</th><th>Amount</th><th>Overdue</th><th>Status</th><th>Warnings</th><th>Actions</th></tr>' +
+    data.map(i=>`<tr>
+      <td style="color:var(--text3);font-family:monospace">${i.inv}</td>
+      <td style="font-weight:600">${i.company}</td>
+      <td style="color:var(--text2);font-size:11px">${i.email}</td>
+      <td>$${i.amount.toLocaleString()}</td>
+      <td>${i.days}d</td>
+      <td>${statusBadge(i.status)}</td>
+      <td style="color:var(--text3)">${i.warnings}</td>
+      <td style="display:flex;gap:5px">
+        <button class="act-btn" onclick="quickCompose(${i.id})">⚡ Warn</button>
+        ${i.status!=='paid'?`<button class="act-btn" style="color:var(--green-text)" onclick="markPaid(${i.id})">✓ Paid</button>`:''}
+      </td>
+    </tr>`).join('');
+}
+
+function renderActivity(){
+  document.getElementById('activityFeed').innerHTML =
+    activity.map((e,i)=>`<div class="tl-row">
+      <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+        <div class="tl-dot" style="background:${e.dot}"></div>
+        ${i<activity.length-1?`<div style="width:1px;flex:1;background:var(--border);margin-top:4px;min-height:16px"></div>`:''}
+      </div>
+      <div style="padding-bottom:4px"><div class="tl-msg">${e.msg}</div><div class="tl-t">${e.time}</div></div>
+    </div>`).join('');
+}
+
+function populateComposeSelect(){
+  document.getElementById('composeSelect').innerHTML =
+    '<option value="">— pick invoice —</option>' +
+    invoices.filter(i=>i.status!=='paid').map(i=>`<option value="${i.id}">${i.company} — $${i.amount.toLocaleString()} (${i.days}d overdue)</option>`).join('');
+}
+
+// ---- NAVIGATION ----
+function showPage(name, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+  const titles={dashboard:'Dashboard',invoices:'Invoices',compose:'AI Compose',activity:'Activity',pricing:'Pricing'};
+  document.getElementById('pageTitle').textContent = titles[name]||name;
+  if(name==='invoices') renderInvoiceTable();
+  if(name==='activity') renderActivity();
+  if(name==='compose') populateComposeSelect();
+}
+
+function filterInvoices(q){
+  renderInvoiceTable(q ? invoices.filter(i=>i.company.toLowerCase().includes(q.toLowerCase())||i.inv.toLowerCase().includes(q.toLowerCase())) : invoices);
+}
+
+function quickCompose(id){
+  showPage('compose', document.querySelector('[onclick*=compose]'));
+  setTimeout(()=>{ document.getElementById('composeSelect').value=id; updateComposeInfo(); }, 60);
+}
+
+function markPaid(id){
+  const inv = invoices.find(i=>i.id===id);
+  if(inv){ inv.status='paid'; renderInvoiceTable(); renderDashTable();
+    activity.unshift({dot:'#16a34a',msg:`${inv.company} marked as paid — $${inv.amount.toLocaleString()}`,time:'Just now'});
+  }
+}
+
+// ---- COMPOSE INFO ----
+function updateComposeInfo(){
+  const inv = invoices.find(i=>i.id===parseInt(document.getElementById('composeSelect').value));
+  document.getElementById('composeInfo').textContent = inv ? `Invoice ${inv.inv}  ·  ${inv.email}  ·  ${inv.warnings} previous warning(s)` : '';
+}
+
+// ---- AI EMAIL GENERATION ----
+async function generateEmail(){
+  const id = parseInt(document.getElementById('composeSelect').value);
+  if(!id){ alert('Please select an invoice first.'); return; }
+  const inv = invoices.find(i=>i.id===id);
+  const tone = document.getElementById('composeTone').value;
+  const btn = document.getElementById('genBtn');
+  const out = document.getElementById('emailOut');
+  const ec = document.getElementById('emailContent');
+
+  btn.disabled=true;
+  btn.innerHTML='<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span> Generating...';
+  out.style.display='block';
+  ec.textContent='Writing your email...';
+
+  const warnNum = inv.warnings + 1;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:`You are a professional accounts receivable assistant. Write a ${tone} payment reminder email.
+
+Details:
+- Company: ${inv.company}
+- Invoice number: ${inv.inv}
+- Amount due: $${inv.amount.toLocaleString()}
+- Days overdue: ${inv.days}
+- Contact email: ${inv.email}
+- Warning number: ${ord(warnNum)}
+- Previous warnings sent: ${inv.warnings}
+
+Write a complete email. First line: "Subject: ..." then a blank line then the email body. Keep it under 150 words. Tone: ${tone}. Sign off as "Collections Team, PaybackAI". No markdown.`}]
+      })
+    });
+    const data = await resp.json();
+    ec.textContent = data.content?.map(c=>c.text||'').join('') || 'Could not generate email. Please try again.';
+  } catch(e) {
+    ec.textContent = `Subject: ${ord(warnNum)} Notice — Invoice ${inv.inv} Payment Required\n\nDear ${inv.company} Accounts Team,\n\nThis is your ${ord(warnNum)} notice for invoice ${inv.inv}, totaling $${inv.amount.toLocaleString()}, now ${inv.days} days past due.\n\nPlease arrange payment immediately or contact us to discuss a payment plan. Continued non-payment may result in escalation to collections.\n\nCollections Team, PaybackAI`;
+  }
+
+  btn.disabled=false;
+  btn.innerHTML='<i class="ti ti-sparkles"></i> Generate with AI';
+}
+
+function markSent(){
+  const id = parseInt(document.getElementById('composeSelect').value);
+  const inv = invoices.find(i=>i.id===id);
+  if(inv){
+    inv.warnings++;
+    if(inv.status==='new') inv.status='warned';
+    activity.unshift({dot:'#2563eb',msg:`${inv.company} — ${ord(inv.warnings)} warning sent`,time:'Just now'});
+    document.getElementById('emailOut').style.display='none';
+    document.getElementById('composeSelect').value='';
+    document.getElementById('composeInfo').textContent='';
+    document.getElementById('sentModal').style.display='flex';
+    renderDashTable();
+  }
+}
+
+function copyEmail(){
+  const text = document.getElementById('emailContent').textContent;
+  navigator.clipboard.writeText(text).catch(()=>{});
+  const btn = event.target.closest('button');
+  const orig = btn.innerHTML;
+  btn.textContent='✓ Copied!';
+  setTimeout(()=>btn.innerHTML=orig, 1500);
+}
+
+// ---- ADD INVOICE ----
+function showAddModal(){ document.getElementById('addModal').style.display='flex'; }
+function closeAddModal(){ document.getElementById('addModal').style.display='none'; }
+
+function addInvoice(){
+  const company = document.getElementById('f-company').value.trim();
+  const email   = document.getElementById('f-email').value.trim();
+  const amount  = parseFloat(document.getElementById('f-amount').value);
+  const days    = parseInt(document.getElementById('f-days').value);
+  const inv     = document.getElementById('f-inv').value.trim();
+  if(!company||!amount||!days){ alert('Please fill in company name, amount, and days overdue.'); return; }
+  invoices.push({id:nextId++,company,email:email||'—',amount,days,inv:inv||('INV-2025-0'+nextId),warnings:0,status:'new'});
+  closeAddModal();
+  renderDashTable();
+  ['f-company','f-email','f-amount','f-days','f-inv'].forEach(id=>document.getElementById(id).value='');
+  activity.unshift({dot:'#7c3aed',msg:`New invoice added: ${company} — $${amount.toLocaleString()}`,time:'Just now'});
+}
+
+// ---- INIT ----
+renderDashTable();
+</script>
+</body>
+</html>
